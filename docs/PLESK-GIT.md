@@ -42,3 +42,13 @@ Der Erinnerungs-Cronjob bleibt separat jede Minute aktiv. Ein Git-Update erzeugt
 - Eine kleine sichtbare Änderung pushen und prüfen, ob sie nach dem automatischen Deployment und erneutem Öffnen ankommt.
 
 Die Plesk-Verbindung und der Webhook müssen im jeweiligen Konto eingerichtet werden; allein durch den Push dieses Repositories sind sie noch nicht aktiviert.
+
+## Bestehende Push-Installation um den HTTP-Client ergänzen
+
+Web-Push benötigt einen konkreten PSR-18-HTTP-Client. Palle deklariert dafür `guzzlehttp/guzzle` ausdrücklich als Produktionsabhängigkeit. Bei einer vorhandenen Lockdatei aus einer älteren Installation nach dem Git-Deployment einmal gezielt aktualisieren:
+
+```sh
+cd /var/www/vhosts/conya.de/palle.conya.de && COMPOSER_ALLOW_SUPERUSER=1 /opt/plesk/php/8.3/bin/php /usr/lib/plesk-9.0/composer.phar update guzzlehttp/guzzle --with-all-dependencies --no-dev --prefer-dist --optimize-autoloader --no-interaction
+```
+
+Danach die erzeugte Lockdatei für reproduzierbare Folgeinstallationen ins Repository übernehmen. Die Änderung benötigt weder neue VAPID-Schlüssel noch eine erneute Geräteanmeldung.
