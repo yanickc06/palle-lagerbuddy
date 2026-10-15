@@ -48,10 +48,12 @@ export function saveDevice(state,values,deviceId=id()){
  if(existing)Object.assign(existing,d);else state.devices.push(d);return d;
 }
 export function startWork(state,{deviceIds,type,templateId=null,taskId=null,at=iso()}){
- requireValue(deviceIds.length&&deviceIds.every(x=>state.devices.some(d=>d.id===x)),'Bitte mindestens ein Gerät wählen.');
+ const task=state.tasks.find(t=>t.id===taskId);
+ requireValue(!taskId||task,'Aufgabe nicht gefunden.');
+ requireValue((deviceIds.length||task&&!task.deviceId)&&deviceIds.every(x=>state.devices.some(d=>d.id===x)),'Bitte mindestens ein Gerät wählen.');
  requireValue(ACTIVITIES.includes(type),'Bitte eine Tätigkeit wählen.');
  const template=state.templates.find(t=>t.id===templateId);
- const w={id:id(),deviceIds:[...new Set(deviceIds)],type,status:'open',startedAt:at,completedAt:null,shiftId:shiftAt(state,at),taskId,events:[],checklist:template?template.items.map(label=>({label,result:'',note:''})):[],result:null};
+ const w={id:id(),deviceIds:[...new Set(deviceIds)],type,...(task?{title:task.title}:{}),status:'open',startedAt:at,completedAt:null,shiftId:shiftAt(state,at),taskId,events:[],checklist:template?template.items.map(label=>({label,result:'',note:''})):[],result:null};
  state.works.push(w);return w;
 }
 export function addEvent(work,{text='',photoIds=[],at=iso()}){
@@ -61,7 +63,7 @@ export function addEvent(work,{text='',photoIds=[],at=iso()}){
 }
 export function completeWork(state,workId,{result,condition,at=iso()}){
  const w=state.works.find(w=>w.id===workId);requireValue(w?.status==='open','Diese Dokumentation ist nicht mehr offen.');
- requireValue(CONDITIONS.includes(condition),'Bitte den Gerätezustand bestätigen.');
+ requireValue(!w.deviceIds.length||CONDITIONS.includes(condition),'Bitte den Gerätezustand bestätigen.');
  requireValue(['In Ordnung','Fehler festgestellt','Nicht bewertet'].includes(result),'Bitte ein Ergebnis wählen.');
  requireValue(w.checklist.every(p=>['ok','fail','na'].includes(p.result)),'Bitte alle Prüfpunkte bewerten.');
  requireValue(Date.parse(at)>=Date.parse(w.startedAt),'Der Abschluss muss nach dem Beginn liegen.');
@@ -78,7 +80,7 @@ export function shiftsCsv(state,month){
  const fmt=x=>new Intl.DateTimeFormat('de-DE',{timeZone:'Europe/Berlin',hour:'2-digit',minute:'2-digit'}).format(new Date(x));
  state.shifts.filter(s=>dateKey(s.start).startsWith(month)).sort((a,b)=>a.start.localeCompare(b.start)).forEach(s=>{
   const end=s.end?Date.parse(s.end):Date.now();const paused=(end-Date.parse(s.start)-shiftMilliseconds(s,end))/60000;
-  const works=state.works.filter(w=>w.shiftId===s.id).map(w=>`${w.type} (${w.status==='completed'?'abgeschlossen':'offen'}): ${w.deviceIds.map(x=>state.devices.find(d=>d.id===x)?.name||'Gerät').join(', ')}`).join(' | ');
+  const works=state.works.filter(w=>w.shiftId===s.id).map(w=>`${w.title||w.type} (${w.status==='completed'?'abgeschlossen':'offen'}): ${w.deviceIds.map(x=>state.devices.find(d=>d.id===x)?.name||'Gerät').join(', ')}`).join(' | ');
   rows.push([dateKey(s.start),fmt(s.start),s.end?fmt(s.end):'Offen',Math.round(paused), (shiftMilliseconds(s,end)/3600000).toFixed(2).replace('.',','),works]);
  });return '\ufeff'+rows.map(r=>r.map(csvCell).join(';')).join('\r\n');
 }

@@ -84,13 +84,14 @@ async function addPhotos(workId,files){
 }
 async function startScanner(batch=false){
  const selection=batch?[...modal.querySelectorAll('[name=devices]:checked')].map(i=>i.value):[];
+ const task=batch?state.tasks.find(t=>t.id===modal.querySelector('#start-form')?.dataset.task):null;
  const existingForm=batch?new FormData(modal.querySelector('#start-form')):null;
  showModal(`<h2>${batch?'Gerät dazuscannen':'Gerät scannen'}</h2><video id="scanner-video" autoplay muted playsinline></video><p class="muted" id="scan-status">Kamera startet …</p><form id="barcode-form"><label>Barcode alternativ eingeben<input name="barcode" required autocomplete="off" autofocus></label><button class="primary wide" type="submit">Gerät öffnen</button></form>`);
  const generation=scanGeneration;
  const found=async barcode=>{
   stopScan();const d=state.devices.find(d=>d.barcode===barcode.trim());
-  if(batch){if(!d){toast('Unbekannter Barcode. Bitte das Gerät zuerst im Geräteverzeichnis anlegen.',true);showModal(V.startForm(state,selection));return;}
-   showModal(V.startForm(state,[...new Set([...selection,d.id])]));
+  if(batch){if(!d){toast('Unbekannter Barcode. Bitte das Gerät zuerst im Geräteverzeichnis anlegen.',true);showModal(V.startForm(state,selection,task));return;}
+   showModal(V.startForm(state,[...new Set([...selection,d.id])],task));
    if(existingForm){modal.querySelector('[name=type]').value=existingForm.get('type');modal.querySelector('[name=template]').value=existingForm.get('template');}
    return;
   }
@@ -148,7 +149,7 @@ async function action(name,entity,button){
  case 'batch-scan':await startScanner(true);return;
  case 'start-work':showModal(V.startForm(state,[entity]));return;
  case 'batch':showModal(V.startForm(state));return;
- case 'task-start':{const t=state.tasks.find(t=>t.id===entity);showModal(V.startForm(state,[t.deviceId],t));return;}
+ case 'task-start':{const t=state.tasks.find(t=>t.id===entity);showModal(V.startForm(state,t.deviceId?[t.deviceId]:[],t));return;}
  case 'add-note':{const text=document.getElementById('work-draft').value;await commit(s=>{const w=s.works.find(w=>w.id===entity);D.addEvent(w,{text});w.draftText='';});toast('Arbeitsschritt gesichert.');return;}
  case 'camera':document.getElementById('camera-input').dataset.work=entity;document.getElementById('camera-input').click();return;
  case 'gallery':document.getElementById('gallery-input').dataset.work=entity;document.getElementById('gallery-input').click();return;
@@ -156,7 +157,7 @@ async function action(name,entity,button){
  case 'finish-work':D.requireValue(!photoBusy,'Bitte warten, bis alle Fotos gespeichert sind.');showModal(V.finishForm(state.works.find(w=>w.id===entity)));return;
  case 'work-meta':showModal(V.workMetaForm(state,state.works.find(w=>w.id===entity)));return;
  case 'view-photo':{const url=await photoURL(entity);showModal(`<h2>Dokumentationsfoto</h2><img class="photo-view" src="${V.esc(url)}" alt="Dokumentationsfoto in voller Ansicht">`);return;}
- case 'new-task':D.requireValue(state.devices.length,'Bitte zuerst ein Gerät anlegen.');showModal(V.taskForm(state,{},entity));return;
+ case 'new-task':showModal(V.taskForm(state,{},entity));return;
  case 'edit-task':showModal(V.taskForm(state,state.tasks.find(t=>t.id===entity)));return;
  case 'new-template':showModal(V.templateForm());return;
  case 'edit-template':showModal(V.templateForm(state.templates.find(t=>t.id===entity)));return;
@@ -210,7 +211,7 @@ document.addEventListener('submit',async e=>{
   }else if(form.id==='finish-form'){
    await commit(s=>{const w=s.works.find(w=>w.id===entity);if(w.draftText?.trim()){D.addEvent(w,{text:w.draftText});w.draftText='';}D.completeWork(s,entity,Object.fromEntries(values));});closeModal();toast('Dokumentation abgeschlossen. Saubere Arbeit.');
   }else if(form.id==='task-form'){
-   await commit(s=>{D.requireValue(s.devices.some(d=>d.id===values.get('deviceId')),'Bitte ein Gerät wählen.');D.requireValue(values.get('title').trim(),'Bitte einen Titel eingeben.');const t={id:entity||D.id(),title:values.get('title').trim(),deviceId:values.get('deviceId'),type:values.get('type'),due:values.get('due'),repeatDays:Number(values.get('repeatDays')),notes:values.get('notes'),completedAt:null};const old=s.tasks.find(t=>t.id===entity);if(old)Object.assign(old,t);else s.tasks.push(t);});closeModal();
+   await commit(s=>{D.requireValue(!values.get('deviceId')||s.devices.some(d=>d.id===values.get('deviceId')),'Bitte ein Gerät wählen.');D.requireValue(values.get('title').trim(),'Bitte einen Titel eingeben.');const t={id:entity||D.id(),title:values.get('title').trim(),deviceId:values.get('deviceId')||null,type:values.get('type'),due:values.get('due'),repeatDays:Number(values.get('repeatDays')),notes:values.get('notes'),completedAt:null};const old=s.tasks.find(t=>t.id===entity);if(old)Object.assign(old,t);else s.tasks.push(t);});closeModal();
   }else if(form.id==='template-form'){
    await commit(s=>{const items=values.get('items').split('\n').map(s=>s.trim()).filter(Boolean);D.requireValue(items.length,'Bitte mindestens einen Prüfpunkt eingeben.');const t={id:entity||D.id(),name:values.get('name').trim(),category:values.get('category'),items};const old=s.templates.find(t=>t.id===entity);if(old)Object.assign(old,t);else s.templates.push(t);});closeModal();
   }else if(form.id==='shift-form'){

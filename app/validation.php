@@ -28,14 +28,16 @@ function validateState(array $s, string $userId): void {
     }
     must($open<=1,'Es darf nur eine Schicht gleichzeitig laufen.');
     foreach($s['tasks'] as $t){
-        textField($t,'title',500,true);textField($t,'notes',10000);must(in_array($t['deviceId']??'', $deviceIds,true),'Aufgabe verweist auf unbekanntes Gerät.');must(in_array($t['type']??'', $types,true),'Unbekannte Tätigkeit.');
+        textField($t,'title',500,true);textField($t,'notes',10000);must(($t['deviceId']??null)===null||($t['deviceId']??null)===''||in_array($t['deviceId'], $deviceIds,true),'Aufgabe verweist auf unbekanntes Gerät.');must(in_array($t['type']??'', $types,true),'Unbekannte Tätigkeit.');
         must(is_string($t['due']??null)&&(bool)preg_match('/^\d{4}-\d{2}-\d{2}$/D',$t['due']),'Ungültiger Termin.');
         must((new DateTimeImmutable($t['due']))->format('Y-m-d')===$t['due'],'Ungültiges Kalenderdatum.');
         must(is_int($t['repeatDays']??null)&&$t['repeatDays']>=0&&$t['repeatDays']<=3650,'Ungültige Wiederholung.');if(!empty($t['completedAt']))timestamp($t['completedAt']);
     }
     foreach($s['templates'] as $t){textField($t,'name',500,true);must(in_array($t['category']??'', $cats,true),'Unbekannte Kategorie.');must(is_array($t['items']??null)&&array_is_list($t['items'])&&count($t['items'])>0&&count($t['items'])<=200,'Ungültige Prüfliste.');foreach($t['items'] as $label)must(is_string($label)&&trim($label)!==''&&mb_strlen($label)<=1000,'Ungültiger Prüfpunkt.');}
     foreach($s['works'] as $w){
-        must(is_array($w['deviceIds']??null)&&array_is_list($w['deviceIds'])&&count($w['deviceIds'])>0,'Geräte fehlen in der Dokumentation.');
+        must(is_array($w['deviceIds']??null)&&array_is_list($w['deviceIds']),'Geräte fehlen in der Dokumentation.');
+        if(isset($w['title']))textField($w,'title',500,true);
+        if(!$w['deviceIds']){ $task=array_values(array_filter($s['tasks'],fn($t)=>$t['id']===($w['taskId']??null)))[0]??null;must($task&&!empty($w['title']),'Gerätelose Dokumentation benötigt eine allgemeine Aufgabe.'); }
         foreach($w['deviceIds'] as $d)must(in_array($d,$deviceIds,true),'Dokumentation verweist auf unbekanntes Gerät.');
         must(in_array($w['type']??'', $types,true),'Unbekannte Tätigkeit.');must(in_array($w['status']??'', ['open','completed'],true),'Ungültiger Dokumentationszustand.');
         $start=timestamp($w['startedAt']??null);if($w['status']==='completed')must(timestamp($w['completedAt']??null)>=$start,'Ungültiger Abschluss.');else must(empty($w['completedAt']),'Offene Dokumentation mit Abschlussdatum.');
