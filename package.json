@@ -1,0 +1,19 @@
+{
+  "name": "palle",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test": "node --test tests/domain.test.mjs",
+    "test:browser": "node tests/browser.mjs",
+    "preview": "node scripts/preview.mjs",
+    "test:php": "node scripts/check-php.mjs",
+    "release": "node scripts/prepare-release.mjs"
+  },
+  "devDependencies": {
+    "@php-wasm/node": "3.1.58",
+    "@php-wasm/universal": "3.1.58",
+    "@zxing/browser": "0.2.1",
+    "playwright": "1.61.1"
+  }
+}

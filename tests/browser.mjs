@@ -1,0 +1,53 @@
+import {chromium} from 'playwright';import assert from 'node:assert/strict';import fs from 'node:fs/promises';import path from 'node:path';
+import {createPHPServer} from './php-server.mjs';
+const service=await createPHPServer();const browser=await chromium.launch({headless:true});
+const context=await browser.newContext({viewport:{width:393,height:852},isMobile:true,hasTouch:true});const page=await context.newPage();const errors=[];page.on('pageerror',e=>errors.push(e.message));
+let failure=null;
+async function saved(){await page.getByText('Auf Server gespeichert',{exact:true}).waitFor({timeout:20000});}
+try{
+ const unauth=await fetch(service.url+'/api.php?action=state');assert.equal(unauth.status,401);
+ console.log('Testing login and initial state');await page.goto(service.url);await page.getByLabel('Benutzername').fill('test-user');await page.getByLabel('Passwort',{exact:true}).fill('TestOnly-12-password');await page.getByRole('button',{name:'Anmelden',exact:true}).click();
+ await page.getByRole('heading',{name:'Alles im Blick.'}).waitFor();
+ await page.getByRole('button',{name:'Geräte',exact:true}).click();await page.locator('[data-action=new-device]').click();
+ await page.getByLabel('Bezeichnung / Modell').fill('Moving Head 014');await page.getByLabel('Barcode',{exact:true}).fill('TOP-000014');await page.getByLabel('Stellplatz').fill('L2 / 03');await page.getByRole('button',{name:'Gerät speichern',exact:true}).click();await saved();
+ await page.locator('[data-route=settings]').click();await page.getByRole('button',{name:'Prüfliste anlegen',exact:true}).click();await page.locator('#template-form [name=name]').fill('Moving-Head-Check');await page.locator('#template-form [name=items]').fill('Gehäuse prüfen\nFunktion prüfen');await page.getByRole('button',{name:'Prüfliste speichern'}).click();await saved();
+ await page.getByRole('button',{name:'Aufgaben',exact:true}).click();await page.locator('[data-action=new-task]').click();await page.getByLabel('Titel',{exact:true}).fill('Reinigung vor Einsatz');await page.locator('#task-form [name=repeatDays]').fill('7');await page.getByRole('button',{name:'Aufgabe speichern',exact:true}).click();await saved();
+ await page.getByRole('button',{name:'Heute',exact:true}).click();await page.getByRole('button',{name:'Kommen',exact:true}).click();await saved();
+ await page.getByRole('button',{name:'Geräte',exact:true}).click();await page.getByRole('button',{name:/Moving Head 014/}).click();await page.getByRole('button',{name:'Dokumentation starten',exact:true}).click();await page.locator('#start-form select[name=type]').selectOption('Reinigung');await page.getByRole('button',{name:'Starten',exact:true}).click();
+ await page.getByLabel('Notiz',{exact:true}).fill('Gehäuse geöffnet, Lüfter stark verstaubt.');await page.getByText('Entwurf auf diesem Gerät gesichert.',{exact:true}).waitFor();await saved();
+ console.log('Testing ongoing draft recovery and multiple photos');const workURL=page.url();await page.reload();await page.getByRole('heading',{name:'Reinigung',exact:true}).waitFor();assert.equal(await page.getByLabel('Notiz',{exact:true}).inputValue(),'Gehäuse geöffnet, Lüfter stark verstaubt.');
+ await page.getByRole('button',{name:'Notiz hinzufügen',exact:true}).click();
+ await page.locator('#gallery-input').setInputFiles([path.resolve('assets/palle-mascot.png'),path.resolve('assets/palle-mascot.png')]);await page.getByText('2 Foto(s)',{exact:false}).first().waitFor();await saved();
+ assert.equal(await page.locator('.gallery img').count(),2);
+ await page.locator('#camera-input').setInputFiles(path.resolve('assets/palle-mascot.png'));await page.getByText('3 Foto(s)',{exact:false}).first().waitFor();await saved();
+ await page.reload();await page.getByRole('heading',{name:'Reinigung',exact:true}).waitFor();assert.equal(await page.locator('.gallery img').count(),3);
+ await page.screenshot({path:'work/palle-dokumentation.png',fullPage:true});
+ console.log('Testing offline recovery and later synchronization');
+ await page.evaluate(()=>navigator.serviceWorker.ready.then(()=>true));await context.setOffline(true);await page.reload();await page.locator('#work-draft').waitFor();
+ await page.locator('#work-draft').fill('Offline weitergearbeitet.');await page.getByText('Entwurf auf diesem Gerät gesichert.',{exact:true}).waitFor();await page.getByRole('button',{name:'Notiz hinzufügen',exact:true}).click();
+ await page.locator('#camera-input').setInputFiles(path.resolve('assets/palle-mascot.png'));await page.getByText('4 Foto(s)',{exact:false}).first().waitFor();await page.reload();await page.locator('.gallery img').first().waitFor();assert.equal(await page.locator('.gallery img').count(),4);
+ await context.setOffline(false);await saved();
+ await page.getByRole('button',{name:'Heute',exact:true}).click();await page.getByRole('button',{name:'Gehen',exact:true}).click();await saved();
+ await page.goto(workURL);await page.getByLabel('Notiz',{exact:true}).fill('Reinigung abgeschlossen, Funktion geprüft.');await page.getByRole('button',{name:'Dokumentation abschließen',exact:true}).click();await page.getByLabel('Ergebnis',{exact:true}).selectOption('In Ordnung');await page.getByRole('button',{name:'Verbindlich abschließen',exact:true}).click();await page.getByText('Abgeschlossen',{exact:true}).first().waitFor();await saved();
+ await page.getByRole('button',{name:'Arbeitszeit',exact:true}).click();
+ const downloadPromise=page.waitForEvent('download');await page.getByRole('button',{name:'CSV exportieren',exact:true}).click();const download=await downloadPromise;await download.saveAs('work/stunden-test.csv');assert.match(await fs.readFile('work/stunden-test.csv','utf8'),/Reinigung/);
+ await page.pdf({path:'work/stunden-test.pdf',format:'A4',printBackground:true});
+ await page.locator('.item[data-route^="shift/"]').click();assert.equal(await page.locator('.item[data-route^="work/"]').count(),1);
+ await page.getByRole('button',{name:'Geräte',exact:true}).click();await page.getByLabel('Gerät suchen').fill('TOP-000014');assert.equal(await page.locator('#device-list .item').count(),1);
+ console.log('Testing custom checklists and recurring task completion');
+ await page.getByRole('button',{name:'Aufgaben',exact:true}).click();await page.getByRole('button',{name:/Reinigung vor Einsatz/}).click();await page.getByRole('button',{name:'Dokumentation starten',exact:true}).click();await page.locator('#start-form select[name=template]').selectOption({label:'Moving-Head-Check · Licht'});await page.getByRole('button',{name:'Starten',exact:true}).click();
+ await page.locator('[data-index="0"][data-value=ok]').click();await page.locator('[data-index="1"][data-value=fail]').click();await page.getByRole('button',{name:'Dokumentation abschließen',exact:true}).click();assert.equal(await page.getByLabel('Ergebnis',{exact:true}).inputValue(),'Fehler festgestellt');await page.getByRole('button',{name:'Verbindlich abschließen',exact:true}).click();await saved();await page.getByRole('button',{name:'Aufgaben',exact:true}).click();assert.equal(await page.locator('.item[data-route^="task/"]').count(),1);
+ await page.getByRole('button',{name:'Heute',exact:true}).click();await page.screenshot({path:'work/palle-heute.png',fullPage:true});
+ for(const width of [320,393,1280]){await page.setViewportSize({width,height:900});const overflow=await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth);assert.equal(overflow,false,`overflow at ${width}px`);}
+ console.log('Testing server concurrency and access controls');
+ // Separate login and stale-version rejection on the real PHP API.
+ const other=await browser.newContext();const login=await other.request.post(service.url+'/api.php?action=login',{data:{username:'test-user',password:'TestOnly-12-password'}});const auth=await login.json();
+ const original=await (await other.request.get(service.url+'/api.php?action=state')).json();
+ const photo=original.state.works[0].events.find(e=>e.photoIds.length).photoIds[0];const remotePhoto=await other.request.get(service.url+'/api.php?action=photo&id='+photo);assert.equal(remotePhoto.status(),200);assert.equal(remotePhoto.headers()['content-type'],'image/jpeg');const bad=await other.request.put(service.url+'/api.php?action=state',{data:original});assert.equal(bad.status(),403);
+ const write=await other.request.put(service.url+'/api.php?action=state',{headers:{'X-Palle-CSRF':auth.csrf},data:original});assert.equal(write.status(),200);
+ const stale=await other.request.put(service.url+'/api.php?action=state',{headers:{'X-Palle-CSRF':auth.csrf},data:original});assert.equal(stale.status(),409);
+ const invalid=structuredClone(original);invalid.revision=original.revision+1;invalid.state.devices.push({...invalid.state.devices[0],id:crypto.randomUUID()});const reject=await other.request.put(service.url+'/api.php?action=state',{headers:{'X-Palle-CSRF':auth.csrf},data:invalid});assert.equal(reject.status(),422);
+ await page.getByRole('button',{name:'Geräte',exact:true}).click();await page.getByRole('button',{name:/Moving Head 014/}).click();await page.getByRole('button',{name:'Bearbeiten',exact:true}).click();await page.getByLabel('Stellplatz').fill('Lokale Änderung bei Konflikt');await page.getByRole('button',{name:'Gerät speichern'}).click();await page.getByText('Auf dem Server gibt es neuere Änderungen.',{exact:true}).waitFor({timeout:15000});await page.reload();await page.locator('.meta').waitFor();assert.match(await page.locator('.meta').textContent(),/Lokale Änderung bei Konflikt/);
+ await other.close();assert.deepEqual(errors,[]);
+ console.log('PASS browser: authenticated PHP API, device creation, shift, draft recovery, 2 gallery photos + camera photo, reload persistence, completion, shift history, offline recovery + photo resync, CSV/PDF, editable checklists, recurring task completion, search, 320/393/1280px, CSRF, stale revision, duplicate barcode rejection, conflict recovery.');
+}catch(e){failure=e;console.error(e);console.error('Page errors:',errors);await page.screenshot({path:'work/test-failure.png',fullPage:true});await fs.writeFile('work/test-failure.html',await page.content());}finally{await context.close();await browser.close();await service.close();process.exit(failure||errors.length?1:0);}

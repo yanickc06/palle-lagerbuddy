@@ -1,0 +1,12 @@
+Options -Indexes
+DirectoryIndex index.html
+<IfModule mod_headers.c>
+Header always set X-Content-Type-Options "nosniff"
+Header always set Referrer-Policy "same-origin"
+Header always set X-Frame-Options "DENY"
+Header always set Permissions-Policy "camera=(self), microphone=(), geolocation=()"
+Header always set Content-Security-Policy "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' blob: data:; media-src 'self' blob:; connect-src 'self'; worker-src 'self'; object-src 'none'; base-uri 'self'; frame-ancestors 'none'; form-action 'self'"
+<FilesMatch "^(sw\.js|index\.html|app\.js|app\.css|domain\.js|store\.js|views\.js)$">
+Header set Cache-Control "no-cache"
+</FilesMatch>
+</IfModule>

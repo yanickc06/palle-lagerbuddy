@@ -1,0 +1,329 @@
+lockfileVersion: '9.0'
+
+settings:
+  autoInstallPeers: true
+  excludeLinksFromLockfile: false
+
+importers:
+
+  .:
+    devDependencies:
+      '@php-wasm/node':
+        specifier: 3.1.58
+        version: 3.1.58
+      '@php-wasm/universal':
+        specifier: 3.1.58
+        version: 3.1.58
+      '@zxing/browser':
+        specifier: 0.2.1
+        version: 0.2.1(@zxing/library@0.23.0)
+      playwright:
+        specifier: 1.61.1
+        version: 1.61.1
+
+packages:
+
+  '@nodable/entities@3.1.0':
+    resolution: {integrity: sha512-LsS/DjHr+uDM647Gru/cA8+J3a3HfhttwCKLyuoyN7yXTFCxKBtSgMQBvrW9yNPa2/zDRUNuGPaH5QUFoa4arQ==}
+
+  '@php-wasm/cli-util@3.1.58':
+    resolution: {integrity: sha512-G/+M4FWPKqEPRRiIsl3qwqrqR+0lgRzgvUHqvvAG6dbwN+KUQnAnLcn+gp3BYb0C6TpJu1nN325kkYQ3sx8dVg==}
+    engines: {node: '>=24.18.0', npm: '>=11.16.0'}
+
+  '@php-wasm/logger@3.1.58':
+    resolution: {integrity: sha512-8ySsVa7XJ7x+onkaS1Z/EIFSvAS64+p5RbgJhlhoKh5RWErtUUBC5z01acDb4N7hH3z/euBCLifw+ZUqUfsNhA==}
+    engines: {node: '>=24.18.0', npm: '>=11.16.0'}
+
+  '@php-wasm/node-5-2@3.1.58':
+    resolution: {integrity: sha512-DGXi2I4cBGwNIKSbFdXUIz0o+0YZWHnTSebgLOrWERtfTo01HnjpYKFgqK5xJkuy/tWcfulh5Tmd3jO5wPrKMQ==}
+    engines: {node: '>=24.18.0', npm: '>=11.16.0'}
+
+  '@php-wasm/node-7-4@3.1.58':
+    resolution: {integrity: sha512-Sb8NgU/DRe9fLC72H5ItdWCrXVUNsOTK+MsOtvCZA7fS48V60Du9sfE2EPjsC+a1NZynarNtd+TSN+aAzNJ1qA==}
+    engines: {node: '>=24.18.0', npm: '>=11.16.0'}
+
+  '@php-wasm/node-8-0@3.1.58':
+    resolution: {integrity: sha512-9Zz1ExZDdpet2XCzKTrszOnZyZm4aUQZDLHabIvzsTYGena2CS7rDJ9xe5qhil+6mF61doVjAQENZxvrmrd1lw==}
+    engines: {node: '>=24.18.0', npm: '>=11.16.0'}
+
+  '@php-wasm/node-8-1@3.1.58':
+    resolution: {integrity: sha512-Lm8OErJf2r7EmOmuc598RPIRTrFdwT9emh9FhRCgElEHHFQ1cLnYuZUc96cKUN9P9Ga/g8eKlfgZZzywIWnn8Q==}
+    engines: {node: '>=24.18.0', npm: '>=11.16.0'}
+
+  '@php-wasm/node-8-2@3.1.58':
+    resolution: {integrity: sha512-xgH70JttGIpqvXHJC4+CrLRZT/Mb2XRKUWKV/C7BL4cVmH/HjW7wnsltJwj6NCstz7kxtdVManP3r2y2aV5M5Q==}
+    engines: {node: '>=24.18.0', npm: '>=11.16.0'}
+
+  '@php-wasm/node-8-3@3.1.58':
+    resolution: {integrity: sha512-H3Wf5ATEqb6VGmftcvpLAot0/+g7UDVFwWtR0RVb4xDZujz2N0okFW2ZUjSPVBgEkG1fr3A171Cll3EPYKu2Dg==}
+    engines: {node: '>=24.18.0', npm: '>=11.16.0'}
+
+  '@php-wasm/node-8-4@3.1.58':
+    resolution: {integrity: sha512-gn9wL4p/IS/351TseZCrpsO89jwNQs0poz+6+Oox5bCyDXH73KCSm8JJo/IqL2+MERSZdo2Lnu/bz8ZkLYHhZg==}
+    engines: {node: '>=24.18.0', npm: '>=11.16.0'}
+
+  '@php-wasm/node-8-5@3.1.58':
+    resolution: {integrity: sha512-gRBSRJlfvxBuIrUyO3pGAww7cGOMfIPEF31U2GVNf//ycsrm8sr1Y6R47FHIdsCDEZ6oorw15dxjZ8nQtL7lkw==}
+    engines: {node: '>=24.18.0', npm: '>=11.16.0'}
+
+  '@php-wasm/node@3.1.58':
+    resolution: {integrity: sha512-lnDxzmu9fOubysYuvcvErvRKit7I/rm0ElB/u/lVIAobsdpbKh30sS5r2Bka3paQxzQHehXGpfL2jCKe2MtpSQ==}
+    engines: {node: '>=24.18.0', npm: '>=11.16.0'}
+
+  '@php-wasm/progress@3.1.58':
+    resolution: {integrity: sha512-wmGxB9DBHluyyTHOVdIrlZWUYxeocmxh7eAUJV8RSg8xewl3xKcuXgTBI+/vt8J/vragIzqyygvNhgo6sBy6Gw==}
+    engines: {node: '>=24.18.0', npm: '>=11.16.0'}
+
+  '@php-wasm/stream-compression@3.1.58':
+    resolution: {integrity: sha512-0r3fEqRbw8RwKSHGcaHKzJF8mRHYXrIOHQ2QDtF5qeMMt+ib5xEIpTgsn+0/hveYRdz2TCyRh1Yzu/cHoDe/WQ==}
+
+  '@php-wasm/universal@3.1.58':
+    resolution: {integrity: sha512-pZ9UHlMB3Y12Qs504JbSmJBj9gNAjHgkAUcttpnR6nGFCOFo58+eH6rFoh+h9s1QuTww5xvivHoj34qPCNWeiw==}
+    engines: {node: '>=24.18.0', npm: '>=11.16.0'}
+
+  '@php-wasm/util@3.1.58':
+    resolution: {integrity: sha512-6u+rIRZGawe3o5qFQDhmjfY1wn3RVQhOXsp6Nci/dmDeLPzwdyEZYixHVZmxKrEC9EtKzk4TUR++hgPPx9K9MA==}
+    engines: {node: '>=24.18.0', npm: '>=11.16.0'}
+
+  '@zxing/browser@0.2.1':
+    resolution: {integrity: sha512-92pVfVDUXbc15xu9vIEmhNyqIEASMEkDF92CwT6T+7sg2EHXJRktH9CQKoQSXe51UtbNsj+Fm09H/JBWHMs/Sw==}
+    peerDependencies:
+      '@zxing/library': ^0.23.0
+
+  '@zxing/library@0.23.0':
+    resolution: {integrity: sha512-6fkkoFwP8CHxl6ugnPsj74PLJgX2iRv5zczGAyt5OBzQgxFhuhF0NCEc4t4OvSr8xAv2MRLlI0Iu9ZGDZQ2urA==}
+    engines: {node: '>= 24.0.0'}
+
+  '@zxing/text-encoding@0.9.0':
+    resolution: {integrity: sha512-U/4aVJ2mxI0aDNI8Uq0wEhMgY+u4CNtEb0om3+y3+niDAsoTCOB33UF0sxpzqzdqXLqmvc+vZyAt4O8pPdfkwA==}
+
+  anynum@1.0.1:
+    resolution: {integrity: sha512-N6//FLET/tXYNM/F6ABca1oH6fWB+KlTt909Le28WMDBk8oaT4vY17DCrwg2MvmuqUKt3Ni4N5dGJ/EoBgcO6A==}
+
+  fast-xml-builder@1.3.1:
+    resolution: {integrity: sha512-pIM/1n3ntFXKYrUZwW7QCK0gAW7XY+wzj1YMIV3tLDvPj/V+zTGJK5e3/4WJfwj0qWw2ElNXiTixda/R+3YSug==}
+
+  fast-xml-parser@5.11.2:
+    resolution: {integrity: sha512-R9iDuNrQYeQut46cn2r2wHKn4HYzVDvDm5J1wW+koZewykv0yuO2HChTYeZtrULyHIDM9cj9TUXloCsueCQUog==}
+    hasBin: true
+
+  fs-ext-extra-prebuilt@2.2.7:
+    resolution: {integrity: sha512-Q7rayYRBDIvDF01HWOwSSjoaP+05N1g+o3BXL1Zf8Frw2JkjSmi4EtvCBITuW30l6hB2m2TW1pehdh8wyU/+gw==}
+    engines: {node: '>= 8.0.0'}
+
+  fsevents@2.3.2:
+    resolution: {integrity: sha512-xiqMQR4xAeHTuB9uWm+fFRcIOgKBMiOBP+eXiyT7jsgVCq1bkVygt00oASowB7EdtpOHaaPgKt812P9ab+DDKA==}
+    engines: {node: ^8.16.0 || ^10.6.0 || >=11.0.0}
+    os: [darwin]
+
+  ini@4.1.2:
+    resolution: {integrity: sha512-AMB1mvwR1pyBFY/nSevUX6y8nJWS63/SzUKD3JyQn97s4xgIdgQPT75IRouIiBAN4yLQBUShNYVW0+UG25daCw==}
+    engines: {node: ^14.17.0 || ^16.13.0 || >=18.0.0}
+
+  is-unsafe@2.0.2:
+    resolution: {integrity: sha512-HgbIHPBH0KHHCcjLfGsCvhtPTVxjaAZlXjwdz7/GQC40SjSe4sfQsar8J5VFo8JOSbarkpV0OLG95bbaNd9aAQ==}
+
+  jsonc-parser@3.3.1:
+    resolution: {integrity: sha512-HUgH65KyejrUFPvHFPbqOY0rsFip3Bo5wb4ngvdi1EpCYWUQDC5V+Y7mZws+DLkr4M//zQJoanu1SP+87Dv1oQ==}
+
+  nan@2.29.0:
+    resolution: {integrity: sha512-GlGk3HIvitbvs+LT3g6XUP1kpirKNvmDFwF/bmo6XNWSb/eYEs/O4bfgIEIXCZ+lIOTS5xNwDvSGMw6FJdAhtA==}
+
+  path-expression-matcher@1.6.2:
+    resolution: {integrity: sha512-enSlaiat05iasnzmgNxRj8reFdj3puY2QpNgP1aPIaVfT6nn9ICuPoFlKHk8EN22HcwewshO+mN2DGbkCEOtqQ==}
+    engines: {node: '>=14.0.0'}
+
+  playwright-core@1.61.1:
+    resolution: {integrity: sha512-h7Qlt6m4REp25qvIdvbDtVmD4LqVXfpRxhORv9L0jzETM05p4fuPJ3dKyuSXQxDSbXnmS79HAgi9589lGSpLkg==}
+    engines: {node: '>=18'}
+    hasBin: true
+
+  playwright@1.61.1:
+    resolution: {integrity: sha512-DWnY5o3YbLWK4GovuAVwpqL+1VwGNdUGrRr++8j8PtQQzvAVZUIMjKQ90fY689sEJZJBbZVw1rXaOKSTitkzPQ==}
+    engines: {node: '>=18'}
+    hasBin: true
+
+  strnum@2.5.1:
+    resolution: {integrity: sha512-UM4nTLWzQiDBseVxUGxN0wJzIk0UU89Qi7pKXz9qISo+lhviJikTuikBsK/oFRlpvYHvSdz0TVoLyQ+sEpYwxA==}
+
+  ts-custom-error@3.3.1:
+    resolution: {integrity: sha512-5OX1tzOjxWEgsr/YEUWSuPrQ00deKLh6D7OTWcvNHm12/7QPyRh8SYpyWvA4IZv8H/+GQWQEh/kwo95Q9OVW1A==}
+    engines: {node: '>=14.0.0'}
+
+  wasm-feature-detect@1.8.0:
+    resolution: {integrity: sha512-zksaLKM2fVlnB5jQQDqKXXwYHLQUVH9es+5TOOHwGOVJOCeRBCiPjwSg+3tN2AdTCzjgli4jijCH290kXb/zWQ==}
+
+  ws@8.21.0:
+    resolution: {integrity: sha512-Vsp28b7DRcimFQvrqu2Wek3z1iYxDCWqHYB8Qsnk/S4RfaCQzPGPyBNuVjJV3cd6UiKtUtp6sNM77gWvzcCH+g==}
+    engines: {node: '>=10.0.0'}
+    peerDependencies:
+      bufferutil: ^4.0.1
+      utf-8-validate: '>=5.0.2'
+    peerDependenciesMeta:
+      bufferutil:
+        optional: true
+      utf-8-validate:
+        optional: true
+
+  xml-naming@0.3.0:
+    resolution: {integrity: sha512-ghig2TBE/H11aOVgmahA3MhimvkBr6JIYknH/Dhdk10nXwdbIqBJsbfMxpvFPG8bAw77gN29aQWvKpmVoPlvPQ==}
+    engines: {node: '>=16.0.0'}
+
+snapshots:
+
+  '@nodable/entities@3.1.0': {}
+
+  '@php-wasm/cli-util@3.1.58':
+    dependencies:
+      '@php-wasm/util': 3.1.58
+      fast-xml-parser: 5.11.2
+      jsonc-parser: 3.3.1
+
+  '@php-wasm/logger@3.1.58': {}
+
+  '@php-wasm/node-5-2@3.1.58':
+    dependencies:
+      '@php-wasm/universal': 3.1.58
+      wasm-feature-detect: 1.8.0
+
+  '@php-wasm/node-7-4@3.1.58':
+    dependencies:
+      '@php-wasm/universal': 3.1.58
+      wasm-feature-detect: 1.8.0
+
+  '@php-wasm/node-8-0@3.1.58':
+    dependencies:
+      '@php-wasm/universal': 3.1.58
+      wasm-feature-detect: 1.8.0
+
+  '@php-wasm/node-8-1@3.1.58':
+    dependencies:
+      '@php-wasm/universal': 3.1.58
+      wasm-feature-detect: 1.8.0
+
+  '@php-wasm/node-8-2@3.1.58':
+    dependencies:
+      '@php-wasm/universal': 3.1.58
+      wasm-feature-detect: 1.8.0
+
+  '@php-wasm/node-8-3@3.1.58':
+    dependencies:
+      '@php-wasm/universal': 3.1.58
+      wasm-feature-detect: 1.8.0
+
+  '@php-wasm/node-8-4@3.1.58':
+    dependencies:
+      '@php-wasm/universal': 3.1.58
+      wasm-feature-detect: 1.8.0
+
+  '@php-wasm/node-8-5@3.1.58':
+    dependencies:
+      '@php-wasm/universal': 3.1.58
+      wasm-feature-detect: 1.8.0
+
+  '@php-wasm/node@3.1.58':
+    dependencies:
+      '@php-wasm/cli-util': 3.1.58
+      '@php-wasm/logger': 3.1.58
+      '@php-wasm/node-5-2': 3.1.58
+      '@php-wasm/node-7-4': 3.1.58
+      '@php-wasm/node-8-0': 3.1.58
+      '@php-wasm/node-8-1': 3.1.58
+      '@php-wasm/node-8-2': 3.1.58
+      '@php-wasm/node-8-3': 3.1.58
+      '@php-wasm/node-8-4': 3.1.58
+      '@php-wasm/node-8-5': 3.1.58
+      '@php-wasm/universal': 3.1.58
+      '@php-wasm/util': 3.1.58
+      fs-ext-extra-prebuilt: 2.2.7
+      wasm-feature-detect: 1.8.0
+      ws: 8.21.0
+    transitivePeerDependencies:
+      - bufferutil
+      - utf-8-validate
+
+  '@php-wasm/progress@3.1.58':
+    dependencies:
+      '@php-wasm/logger': 3.1.58
+
+  '@php-wasm/stream-compression@3.1.58':
+    dependencies:
+      '@php-wasm/util': 3.1.58
+
+  '@php-wasm/universal@3.1.58':
+    dependencies:
+      '@php-wasm/logger': 3.1.58
+      '@php-wasm/progress': 3.1.58
+      '@php-wasm/stream-compression': 3.1.58
+      '@php-wasm/util': 3.1.58
+      ini: 4.1.2
+
+  '@php-wasm/util@3.1.58': {}
+
+  '@zxing/browser@0.2.1(@zxing/library@0.23.0)':
+    dependencies:
+      '@zxing/library': 0.23.0
+    optionalDependencies:
+      '@zxing/text-encoding': 0.9.0
+
+  '@zxing/library@0.23.0':
+    dependencies:
+      ts-custom-error: 3.3.1
+    optionalDependencies:
+      '@zxing/text-encoding': 0.9.0
+
+  '@zxing/text-encoding@0.9.0':
+    optional: true
+
+  anynum@1.0.1: {}
+
+  fast-xml-builder@1.3.1:
+    dependencies:
+      path-expression-matcher: 1.6.2
+      xml-naming: 0.3.0
+
+  fast-xml-parser@5.11.2:
+    dependencies:
+      '@nodable/entities': 3.1.0
+      fast-xml-builder: 1.3.1
+      is-unsafe: 2.0.2
+      path-expression-matcher: 1.6.2
+      strnum: 2.5.1
+      xml-naming: 0.3.0
+
+  fs-ext-extra-prebuilt@2.2.7:
+    dependencies:
+      nan: 2.29.0
+
+  fsevents@2.3.2:
+    optional: true
+
+  ini@4.1.2: {}
+
+  is-unsafe@2.0.2: {}
+
+  jsonc-parser@3.3.1: {}
+
+  nan@2.29.0: {}
+
+  path-expression-matcher@1.6.2: {}
+
+  playwright-core@1.61.1: {}
+
+  playwright@1.61.1:
+    dependencies:
+      playwright-core: 1.61.1
+    optionalDependencies:
+      fsevents: 2.3.2
+
+  strnum@2.5.1:
+    dependencies:
+      anynum: 1.0.1
+
+  ts-custom-error@3.3.1: {}
+
+  wasm-feature-detect@1.8.0: {}
+
+  ws@8.21.0: {}
+
+  xml-naming@0.3.0: {}
