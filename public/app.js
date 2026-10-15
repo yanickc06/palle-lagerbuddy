@@ -5,7 +5,22 @@ import * as Store from './store.js';
 const app=document.getElementById('app'),modal=document.getElementById('modal');
 const preview=new URLSearchParams(location.search).get('preview')==='1';
 const cacheKey=preview?'preview':'account';
-let state=D.emptyState(),revision=0,csrf='',user=null,dirty=false,syncing=false,conflict=false,mutation=0,pendingPhotos=[],route=location.hash.slice(1)||'home',month=D.dateKey().slice(0,7),pushStatus='',photoBusy=false,booted=false;
+let state=D.emptyState(),revision=0,csrf='',user=null,dirty=false,syncing=false,conflict=false,mutation=0,pendingPhotos=[],route=location.hash.slice(1)||'home',month=D.dateKey().slice(0,7),pushStatus='Mitteilungsstatus wird geprüft …',photoBusy=false,booted=false;
+let pushEnabled=false,pushCheck=0;
+function pushDisplay(){const label=document.getElementById('push-status');if(label)label.textContent=pushStatus;const activate=document.querySelector('[data-action=push]');if(activate)activate.hidden=pushEnabled;const deactivate=document.querySelector('[data-action=push-off]');if(deactivate)deactivate.hidden=!pushEnabled;}
+async function refreshPushStatus(){
+ const check=++pushCheck;let message,enabled=false;
+ try{
+  if(preview)message='Mitteilungen sind in der Vorschau nicht verfügbar.';
+  else if(!('serviceWorker' in navigator)||!('PushManager' in window)||!('Notification' in window))message='Bitte Palle auf dem iPhone vom Home-Bildschirm öffnen.';
+  else{const registration=await navigator.serviceWorker.getRegistration('./');const subscription=await registration?.pushManager.getSubscription();
+   enabled=Notification.permission==='granted'&&!!subscription;
+   if(enabled){message='Mitteilungen sind auf diesem Gerät aktiviert.';if(navigator.onLine&&user){try{if(!csrf){const session=await api('session');csrf=session.csrf;}await api('subscription',{method:'POST',body:JSON.stringify(subscription)});}catch{message='Auf diesem Gerät aktiviert. Serveranmeldung noch nicht bestätigt; bitte Verbindung oder Anmeldung prüfen.';}}else message='Auf diesem Gerät aktiviert · offline noch nicht mit dem Server geprüft.';}
+   else message=Notification.permission==='denied'?'Mitteilungen sind in den Geräteeinstellungen blockiert.':'Mitteilungen sind auf diesem Gerät deaktiviert.';
+  }
+ }catch{message='Mitteilungsstatus konnte nicht geprüft werden. Bitte erneut öffnen.';}
+ if(check===pushCheck){pushEnabled=enabled;pushStatus=message;pushDisplay();}
+}
 let updateStatus='Noch nicht nach Updates gesucht.',updateAvailable=false,updater;
 function updateDisplay(){const status=document.getElementById('update-status');if(status)status.textContent=updateStatus;const button=document.querySelector('[data-action=apply-update]');if(button)button.hidden=!updateAvailable;}
 let toastTimer,scanControls,scanGeneration=0,syncTimer;
@@ -50,12 +65,12 @@ async function sync(){
 }
 function currentNav(){return {device:'devices',work:'home',task:'tasks',shift:'shifts'}[route.split('/')[0]]||route;}
 function render(){
- app.innerHTML=`<div class="app-shell">${preview?'<div class="preview-banner">Lokale Vorschau · Daten nur in diesem Browser · keine Serveranmeldung</div>':''}<header class="topbar"><div><div class="brand">palle<span>.</span></div><div class="eyebrow">Dein Lagerkollege</div></div><div class="header-actions"><span class="sync-label" id="sync-label"></span><button class="ghost icon-button" data-route="settings" aria-label="Einstellungen">${V.icon('settings-2')}</button></div></header><main class="main">${conflict?'<div class="conflict"><strong>Auf dem Server gibt es neuere Änderungen.</strong><p>Deine lokale Fassung ist gesichert. Lade sie als Sicherung herunter, bevor du den Serverstand übernimmst.</p><div class="actions"><button data-action="backup">Lokale Sicherung</button><button data-action="resolve-conflict">Serverstand übernehmen</button></div></div>':''}${V.pageContent(route,state,{month,preview,pushStatus,updateStatus,updateAvailable})}</main><nav class="bottom-nav" aria-label="Hauptnavigation">${[['home','house','Heute'],['devices','boxes','Geräte'],['tasks','list-checks','Aufgaben'],['shifts','clock-3','Arbeitszeit']].map(([key,icon,label])=>`<button data-route="${key}" ${currentNav()===key?'aria-current="page"':''}>${V.icon(icon)}${label}</button>`).join('')}</nav></div>`;
+ app.innerHTML=`<div class="app-shell">${preview?'<div class="preview-banner">Lokale Vorschau · Daten nur in diesem Browser · keine Serveranmeldung</div>':''}<header class="topbar"><div><div class="brand">palle<span>.</span></div><div class="eyebrow">Dein Lagerkollege</div></div><div class="header-actions"><span class="sync-label" id="sync-label"></span><button class="ghost icon-button" data-route="settings" aria-label="Einstellungen">${V.icon('settings-2')}</button></div></header><main class="main">${conflict?'<div class="conflict"><strong>Auf dem Server gibt es neuere Änderungen.</strong><p>Deine lokale Fassung ist gesichert. Lade sie als Sicherung herunter, bevor du den Serverstand übernimmst.</p><div class="actions"><button data-action="backup">Lokale Sicherung</button><button data-action="resolve-conflict">Serverstand übernehmen</button></div></div>':''}${V.pageContent(route,state,{month,preview,pushStatus,pushEnabled,updateStatus,updateAvailable})}</main><nav class="bottom-nav" aria-label="Hauptnavigation">${[['home','house','Heute'],['devices','boxes','Geräte'],['tasks','list-checks','Aufgaben'],['shifts','clock-3','Arbeitszeit']].map(([key,icon,label])=>`<button data-route="${key}" ${currentNav()===key?'aria-current="page"':''}>${V.icon(icon)}${label}</button>`).join('')}</nav></div>`;
  if(route.startsWith('work/')){for(const key of ['camera-input','gallery-input'])document.getElementById(key).dataset.work=route.split('/')[1];}
- setStatus();icons();hydratePhotos(app);
+ setStatus();pushDisplay();icons();hydratePhotos(app);
 }
 function icons(){globalThis.lucide?.createIcons();}
-function go(next){if(photoBusy){toast('Bitte kurz warten, die Fotos werden noch gesichert.');return;}stopScan();route=next;location.hash=next;render();window.scrollTo({top:0});}
+function go(next){if(photoBusy){toast('Bitte kurz warten, die Fotos werden noch gesichert.');return;}stopScan();route=next;location.hash=next;render();if(next==='settings')refreshPushStatus();window.scrollTo({top:0});}
 function showModal(html){stopScan();modal.innerHTML=`<button class="close ghost" data-action="close-modal" aria-label="Schließen">${V.icon('x')}</button>${html}<p id="form-error" class="error" role="alert"></p>`;if(!modal.open)modal.showModal();icons();hydratePhotos(modal);}
 function closeModal(){stopScan();modal.close();modal.innerHTML='';}
 function stopScan(){scanGeneration++;scanControls?.stop();scanControls=null;modal.querySelectorAll('video').forEach(v=>{v.srcObject?.getTracks().forEach(t=>t.stop());v.srcObject=null;});}
@@ -111,13 +126,14 @@ async function startScanner(batch=false){
  }catch(e){const target=modal.querySelector('#scan-status');if(target)target.textContent='Kamera nicht verfügbar: '+e.message;}
 }
 async function enablePush(){
+ ++pushCheck;
  D.requireValue(!preview,'Mitteilungen werden nach der Installation auf deinem Server verfügbar.');
  D.requireValue('serviceWorker' in navigator&&'PushManager' in window,'Bitte Palle auf dem iPhone zum Home-Bildschirm hinzufügen und von dort öffnen.');
  const permission=await Notification.requestPermission();D.requireValue(permission==='granted','Mitteilungen wurden nicht erlaubt. Bitte die iPhone-Einstellungen prüfen.');
  const registration=await navigator.serviceWorker.ready,info=await api('push-info');D.requireValue(info.publicKey,'Web-Push ist auf dem Server noch nicht eingerichtet.');
  let subscription=await registration.pushManager.getSubscription();
  if(!subscription){const padded=info.publicKey+'='.repeat((4-info.publicKey.length%4)%4);const raw=atob(padded.replaceAll('-','+').replaceAll('_','/'));subscription=await registration.pushManager.subscribe({userVisibleOnly:true,applicationServerKey:Uint8Array.from(raw,c=>c.charCodeAt(0))});}
- await api('subscription',{method:'POST',body:JSON.stringify(subscription)});pushStatus='Mitteilungen sind auf diesem Gerät aktiviert.';render();toast(pushStatus);
+ await api('subscription',{method:'POST',body:JSON.stringify(subscription)});pushEnabled=true;pushStatus='Mitteilungen sind auf diesem Gerät aktiviert.';pushDisplay();toast(pushStatus);
 }
 async function testPush(){
  D.requireValue(!preview,'Die Vorschau verschickt keine Mitteilungen.');
@@ -134,10 +150,11 @@ async function saveBeforeUpdate(){
  await saveLocal();
 }
 async function disablePush(){
+ ++pushCheck;
  D.requireValue(!preview,'Die Vorschau verschickt keine Mitteilungen.');
  const reg=await navigator.serviceWorker.ready;const sub=await reg.pushManager.getSubscription();
  if(sub){await api('subscription',{method:'DELETE',body:JSON.stringify({endpoint:sub.endpoint})});await sub.unsubscribe();}
- pushStatus='Mitteilungen sind auf diesem Gerät deaktiviert.';render();
+ pushEnabled=false;pushStatus='Mitteilungen sind auf diesem Gerät deaktiviert.';pushDisplay();
 }
 function download(name,data,mime){const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([data],{type:mime}));a.download=name;document.body.append(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove();},1500);}
 async function backup(){
@@ -249,7 +266,7 @@ async function login(username,password){
  const cached=await Store.getCache(cacheKey);
  if(cached?.dirty&&cached.user?.id===user.id){state=cached.state;revision=cached.revision;pendingPhotos=cached.pendingPhotos||[];dirty=true;}
  else{const remote=await api('state');state=remote.state;revision=remote.revision;dirty=false;pendingPhotos=[];}
- booted=true;await saveLocal();render();queueSync();
+ booted=true;await saveLocal();render();refreshPushStatus();queueSync();
 }
 async function boot(){
  try{
@@ -258,19 +275,19 @@ async function boot(){
   let session;
   try{session=await api('session');}catch(e){
    if(e.status===401){loginScreen();return;}
-   if(!e.status&&cached?.user){state=cached.state;revision=cached.revision;dirty=cached.dirty;pendingPhotos=cached.pendingPhotos||[];user=cached.user;booted=true;render();toast('Offline gestartet. Änderungen werden lokal gesichert.');return;}
+   if(!e.status&&cached?.user){state=cached.state;revision=cached.revision;dirty=cached.dirty;pendingPhotos=cached.pendingPhotos||[];user=cached.user;booted=true;render();refreshPushStatus();toast('Offline gestartet. Änderungen werden lokal gesichert.');return;}
    loginScreen(e.message);return;
   }
   csrf=session.csrf;user=session.user;
   if(cached?.dirty&&cached.user?.id===user.id){state=cached.state;revision=cached.revision;dirty=true;pendingPhotos=cached.pendingPhotos||[];}
   else{const remote=await api('state');state=remote.state;revision=remote.revision;}
-  booted=true;await saveLocal();render();queueSync();
+  booted=true;await saveLocal();render();refreshPushStatus();queueSync();
  }catch(e){app.innerHTML=`<main class="login"><h1>Speichern nicht möglich.</h1><p>${V.esc(e.message)}</p><p class="muted">Bitte privaten Browsermodus beenden oder Speicherplatz freigeben und Palle neu öffnen.</p></main>`;}
 }
 window.addEventListener('hashchange',()=>{if(booted){route=location.hash.slice(1)||'home';render();}});
 async function refreshIfClean(){if(preview||!user||dirty||syncing||queuedMutations||modal.open||document.hidden)return;const version=mutation;try{const session=await api('session');csrf=session.csrf;const remote=await api('state');if(!dirty&&queuedMutations===0&&mutation===version&&remote.revision!==revision){state=remote.state;revision=remote.revision;await saveLocal();render();}}catch{}}
-window.addEventListener('online',()=>{setStatus();queueSync();refreshIfClean();});window.addEventListener('offline',setStatus);
-document.addEventListener('visibilitychange',()=>{if(!document.hidden){setStatus();queueSync();refreshIfClean();}});
+window.addEventListener('online',()=>{setStatus();queueSync();refreshIfClean();refreshPushStatus();});window.addEventListener('offline',setStatus);
+document.addEventListener('visibilitychange',()=>{if(!document.hidden){setStatus();queueSync();refreshIfClean();refreshPushStatus();}});
 setInterval(()=>{if(!booted)return;document.querySelectorAll('[data-timer]').forEach(el=>{const s=state.shifts.find(s=>s.id===el.dataset.timer);if(s)el.innerHTML=V.duration(D.shiftMilliseconds(s))+' <small class="muted">Std.</small>';});},1000);
 if(!preview){updater=createUpdater({onStatus:text=>{updateStatus=text;updateDisplay();},onAvailable:value=>{updateAvailable=value;updateDisplay();}});document.addEventListener('visibilitychange',()=>{if(!document.hidden&&navigator.onLine)updater.check().catch(()=>{});});}
 boot();

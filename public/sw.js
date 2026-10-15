@@ -1,4 +1,4 @@
-const CACHE='palle-shell-v4';
+const CACHE='palle-shell-v5';
 const FILES=['./','./index.html','./app.css','./app.js','./domain.js','./store.js','./views.js','./updates.js','./manifest.webmanifest','./assets/palle.png','./assets/icon-192.png','./assets/icon-512.png','./vendor/lucide.min.js','./vendor/zxing.min.js'];
 self.addEventListener('install',event=>event.waitUntil(caches.open(CACHE).then(cache=>cache.addAll(FILES.map(url=>new Request(url,{cache:'reload'}))))));
 self.addEventListener('activate',event=>event.waitUntil(caches.keys().then(keys=>Promise.all(keys.filter(key=>key.startsWith('palle-shell-')&&key!==CACHE).map(key=>caches.delete(key)))).then(()=>self.clients.claim())));

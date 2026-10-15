@@ -84,4 +84,13 @@ try {
     }
     if($action==='subscription'&&$method==='DELETE'){$data=inputJson();db()->prepare('DELETE FROM palle_subscriptions WHERE endpoint_hash=? AND user_id=?')->execute([hash('sha256',$data['endpoint']??''),$userId]);sendJson(['ok'=>true]);}
     sendJson(['error'=>'Unbekannter Aufruf.'],404);
-} catch(InvalidArgumentException $e){sendJson(['error'=>$e->getMessage()],422);} catch(Throwable $e){error_log('Palle: '.$e->getMessage());sendJson(['error'=>is_file(dirname(__DIR__).'/config.php')?'Serverfehler. Bitte Serverprotokoll prüfen.':'Palle ist noch nicht eingerichtet. Bitte config.php und Datenbank installieren.'],503);}
+} catch(InvalidArgumentException $e){sendJson(['error'=>$e->getMessage()],422);} catch(Throwable $e){
+    error_log('Palle: '.get_class($e).': '.$e->getMessage());
+    if(($action??'')==='push-test'){
+        $type=substr(strrchr('\\'.get_class($e),'\\'),1);
+        if(str_starts_with(get_class($e),'Http\\Discovery\\Exception\\'))sendJson(['error'=>'Dem Server fehlt ein HTTP-Client für den Pushversand. Bitte Composer-Abhängigkeiten inklusive eines PSR-18-Clients installieren.','code'=>'PUSH_HTTP_CLIENT'],503);
+        if(str_contains($e->getMessage(),'[VAPID]'))sendJson(['error'=>'Die VAPID-Konfiguration auf dem Server ist ungültig. Bitte Schlüssel und Kontaktadresse prüfen.','code'=>'PUSH_VAPID'],503);
+        sendJson(['error'=>'Pushversand auf dem Server fehlgeschlagen ('.$type.'). Bitte den zugehörigen Palle-Eintrag im Serverprotokoll prüfen.','code'=>'PUSH_SERVER'],503);
+    }
+    sendJson(['error'=>is_file(dirname(__DIR__).'/config.php')?'Serverfehler. Bitte Serverprotokoll prüfen.':'Palle ist noch nicht eingerichtet. Bitte config.php und Datenbank installieren.'],503);
+}
