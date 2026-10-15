@@ -1,10 +1,13 @@
 import * as D from './domain.js';
 import * as V from './views.js';
+import {createUpdater} from './updates.js';
 import * as Store from './store.js';
 const app=document.getElementById('app'),modal=document.getElementById('modal');
 const preview=new URLSearchParams(location.search).get('preview')==='1';
 const cacheKey=preview?'preview':'account';
 let state=D.emptyState(),revision=0,csrf='',user=null,dirty=false,syncing=false,conflict=false,mutation=0,pendingPhotos=[],route=location.hash.slice(1)||'home',month=D.dateKey().slice(0,7),pushStatus='',photoBusy=false,booted=false;
+let updateStatus='Noch nicht nach Updates gesucht.',updateAvailable=false,updater;
+function updateDisplay(){const status=document.getElementById('update-status');if(status)status.textContent=updateStatus;const button=document.querySelector('[data-action=apply-update]');if(button)button.hidden=!updateAvailable;}
 let toastTimer,scanControls,scanGeneration=0,syncTimer;
 const photoURLs=new Map();
 const api=async(action,options={})=>{
@@ -47,7 +50,7 @@ async function sync(){
 }
 function currentNav(){return {device:'devices',work:'home',task:'tasks',shift:'shifts'}[route.split('/')[0]]||route;}
 function render(){
- app.innerHTML=`<div class="app-shell">${preview?'<div class="preview-banner">Lokale Vorschau · Daten nur in diesem Browser · keine Serveranmeldung</div>':''}<header class="topbar"><div><div class="brand">palle<span>.</span></div><div class="eyebrow">Dein Lagerkollege</div></div><div class="header-actions"><span class="sync-label" id="sync-label"></span><button class="ghost icon-button" data-route="settings" aria-label="Einstellungen">${V.icon('settings-2')}</button></div></header><main class="main">${conflict?'<div class="conflict"><strong>Auf dem Server gibt es neuere Änderungen.</strong><p>Deine lokale Fassung ist gesichert. Lade sie als Sicherung herunter, bevor du den Serverstand übernimmst.</p><div class="actions"><button data-action="backup">Lokale Sicherung</button><button data-action="resolve-conflict">Serverstand übernehmen</button></div></div>':''}${V.pageContent(route,state,{month,preview,pushStatus})}</main><nav class="bottom-nav" aria-label="Hauptnavigation">${[['home','house','Heute'],['devices','boxes','Geräte'],['tasks','list-checks','Aufgaben'],['shifts','clock-3','Arbeitszeit']].map(([key,icon,label])=>`<button data-route="${key}" ${currentNav()===key?'aria-current="page"':''}>${V.icon(icon)}${label}</button>`).join('')}</nav></div>`;
+ app.innerHTML=`<div class="app-shell">${preview?'<div class="preview-banner">Lokale Vorschau · Daten nur in diesem Browser · keine Serveranmeldung</div>':''}<header class="topbar"><div><div class="brand">palle<span>.</span></div><div class="eyebrow">Dein Lagerkollege</div></div><div class="header-actions"><span class="sync-label" id="sync-label"></span><button class="ghost icon-button" data-route="settings" aria-label="Einstellungen">${V.icon('settings-2')}</button></div></header><main class="main">${conflict?'<div class="conflict"><strong>Auf dem Server gibt es neuere Änderungen.</strong><p>Deine lokale Fassung ist gesichert. Lade sie als Sicherung herunter, bevor du den Serverstand übernimmst.</p><div class="actions"><button data-action="backup">Lokale Sicherung</button><button data-action="resolve-conflict">Serverstand übernehmen</button></div></div>':''}${V.pageContent(route,state,{month,preview,pushStatus,updateStatus,updateAvailable})}</main><nav class="bottom-nav" aria-label="Hauptnavigation">${[['home','house','Heute'],['devices','boxes','Geräte'],['tasks','list-checks','Aufgaben'],['shifts','clock-3','Arbeitszeit']].map(([key,icon,label])=>`<button data-route="${key}" ${currentNav()===key?'aria-current="page"':''}>${V.icon(icon)}${label}</button>`).join('')}</nav></div>`;
  if(route.startsWith('work/')){for(const key of ['camera-input','gallery-input'])document.getElementById(key).dataset.work=route.split('/')[1];}
  setStatus();icons();hydratePhotos(app);
 }
@@ -116,6 +119,20 @@ async function enablePush(){
  if(!subscription){const padded=info.publicKey+'='.repeat((4-info.publicKey.length%4)%4);const raw=atob(padded.replaceAll('-','+').replaceAll('_','/'));subscription=await registration.pushManager.subscribe({userVisibleOnly:true,applicationServerKey:Uint8Array.from(raw,c=>c.charCodeAt(0))});}
  await api('subscription',{method:'POST',body:JSON.stringify(subscription)});pushStatus='Mitteilungen sind auf diesem Gerät aktiviert.';render();toast(pushStatus);
 }
+async function testPush(){
+ D.requireValue(!preview,'Die Vorschau verschickt keine Mitteilungen.');
+ D.requireValue('serviceWorker' in navigator&&'PushManager' in window,'Bitte Palle vom Home-Bildschirm öffnen.');
+ const registration=await navigator.serviceWorker.ready,subscription=await registration.pushManager.getSubscription();
+ D.requireValue(subscription&&Notification.permission==='granted','Bitte zuerst Mitteilungen auf diesem Gerät aktivieren.');
+ const result=await api('push-test',{method:'POST',body:JSON.stringify({endpoint:subscription.endpoint})});
+ pushStatus=result.message;const label=document.getElementById('push-status');if(label)label.textContent=pushStatus;toast(pushStatus);
+}
+async function saveBeforeUpdate(){
+ D.requireValue(!photoBusy&&!modal.open,'Bitte zuerst den offenen Dialog schließen und Fotoverarbeitung abwarten.');
+ await draftWrite;await mutationQueue;
+ D.requireValue(!queuedMutations&&!syncing,'Bitte kurz warten, Änderungen werden gespeichert oder synchronisiert.');
+ await saveLocal();
+}
 async function disablePush(){
  D.requireValue(!preview,'Die Vorschau verschickt keine Mitteilungen.');
  const reg=await navigator.serviceWorker.ready;const sub=await reg.pushManager.getSubscription();
@@ -168,6 +185,9 @@ async function action(name,entity,button){
  case 'csv':download(`palle-stunden-${month}.csv`,D.shiftsCsv(state,month),'text/csv;charset=utf-8');return;
  case 'print':window.print();return;
  case 'push':await enablePush();return;
+ case 'push-test':await testPush();return;
+ case 'check-update':D.requireValue(updater,'Updates gibt es in der installierten App.');await updater.check();return;
+ case 'apply-update':await updater.apply(saveBeforeUpdate);return;
  case 'push-off':await disablePush();return;
  case 'backup':await backup();return;
  case 'refresh':case 'resolve-conflict':await freshState();return;
@@ -252,5 +272,5 @@ async function refreshIfClean(){if(preview||!user||dirty||syncing||queuedMutatio
 window.addEventListener('online',()=>{setStatus();queueSync();refreshIfClean();});window.addEventListener('offline',setStatus);
 document.addEventListener('visibilitychange',()=>{if(!document.hidden){setStatus();queueSync();refreshIfClean();}});
 setInterval(()=>{if(!booted)return;document.querySelectorAll('[data-timer]').forEach(el=>{const s=state.shifts.find(s=>s.id===el.dataset.timer);if(s)el.innerHTML=V.duration(D.shiftMilliseconds(s))+' <small class="muted">Std.</small>';});},1000);
-if('serviceWorker' in navigator&&!preview)navigator.serviceWorker.register('./sw.js').catch(()=>{});
+if(!preview){updater=createUpdater({onStatus:text=>{updateStatus=text;updateDisplay();},onAvailable:value=>{updateAvailable=value;updateDisplay();}});document.addEventListener('visibilitychange',()=>{if(!document.hidden&&navigator.onLine)updater.check().catch(()=>{});});}
 boot();

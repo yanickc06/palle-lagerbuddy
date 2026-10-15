@@ -9,7 +9,8 @@
     "preview": "node scripts/preview.mjs",
     "test:php": "node scripts/check-php.mjs",
     "release": "node scripts/prepare-release.mjs",
-    "test:layout": "node tests/safe-area.mjs"
+    "test:layout": "node tests/safe-area.mjs",
+    "test:update-push": "node tests/update-push.mjs"
   },
   "devDependencies": {
     "@php-wasm/node": "3.1.58",

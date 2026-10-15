@@ -55,6 +55,26 @@ try {
         if(!$photo)sendJson(['error'=>'Foto nicht gefunden.'],404);$path=storage().'/photos/'.$photo['filename'];if(!is_file($path))sendJson(['error'=>'Fotodatei fehlt.'],404);
         header('Content-Type: '.$photo['mime']);header('Content-Length: '.filesize($path));header('Content-Disposition: inline; filename="'.$photo['filename'].'"');readfile($path);exit;
     }
+    if($action==='push-test'&&$method==='POST'){
+        $data=inputJson();$endpoint=$data['endpoint']??'';
+        must(is_string($endpoint)&&strlen($endpoint)<4096&&isHttpsEndpoint($endpoint),'Ungültiger Push-Dienst.');
+        $hash=hash('sha256',$endpoint);$q=db()->prepare('SELECT payload FROM palle_subscriptions WHERE endpoint_hash=? AND user_id=?');$q->execute([$hash,$userId]);$payload=$q->fetchColumn();
+        if(!$payload)sendJson(['error'=>'Bitte Mitteilungen auf diesem Gerät erneut aktivieren.'],404);
+        if(time()-(int)($_SESSION['push_test_at']??0)<15)sendJson(['error'=>'Bitte 15 Sekunden bis zur nächsten Testnachricht warten.'],429);
+        if(empty($c['vapid_public'])||empty($c['vapid_private'])||!is_file(dirname(__DIR__).'/vendor/autoload.php'))sendJson(['error'=>'Web-Push ist auf dem Server noch nicht vollständig eingerichtet. Bitte VAPID-Schlüssel und Composer-Installation prüfen.'],503);
+        $_SESSION['push_test_at']=time();
+        require_once dirname(__DIR__).'/vendor/autoload.php';
+        $push=new Minishlink\WebPush\WebPush(['VAPID'=>['subject'=>$c['vapid_subject'],'publicKey'=>$c['vapid_public'],'privateKey'=>$c['vapid_private']]],[],15);
+        $message=['title'=>'Palle · Funkprobe','body'=>'Hier ist Palle. Wenn du das liest, steht die Verbindung. Lagerkollege meldet sich einsatzbereit!','url'=>rtrim($c['app_url'],'/').'/#settings','tag'=>'palle-test'];
+        $report=$push->sendOneNotification(Minishlink\WebPush\Subscription::create(json_decode($payload,true,512,JSON_THROW_ON_ERROR)),json_encode($message,JSON_UNESCAPED_UNICODE|JSON_THROW_ON_ERROR),['TTL'=>60,'urgency'=>'high']);
+        if($report->isSuccess())sendJson(['ok'=>true,'message'=>'Testnachricht an den Push-Dienst übergeben. Prüfe deine Mitteilungen.']);
+        if($report->isSubscriptionExpired()){
+            db()->prepare('DELETE FROM palle_subscriptions WHERE endpoint_hash=? AND user_id=?')->execute([$hash,$userId]);
+            sendJson(['error'=>'Die Push-Anmeldung ist abgelaufen. Bitte Mitteilungen deaktivieren und erneut aktivieren.'],410);
+        }
+        error_log('Palle test push delivery failed: '.$report->getReason());
+        sendJson(['error'=>'Der Push-Dienst konnte die Testnachricht nicht annehmen. Bitte später erneut versuchen.'],502);
+    }
     if($action==='push-info'&&$method==='GET')sendJson(['publicKey'=>$c['vapid_public']??'']);
     if($action==='subscription'&&$method==='POST'){
         $data=inputJson();$endpoint=$data['endpoint']??'';must(is_string($endpoint)&&strlen($endpoint)<4096&&isHttpsEndpoint($endpoint),'Unbekannter Push-Dienst.');

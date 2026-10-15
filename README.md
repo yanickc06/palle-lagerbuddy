@@ -84,7 +84,7 @@ Keine fremden Scripts, Fonts oder CDNs werden zur Laufzeit benötigt. Bibliothek
    ```
 
    Cron-Ausdruck: `* * * * *`. Die PHP-Logik verwendet Europe/Berlin unabhängig von der Serverzeitzone. Der Dienst bündelt Aufgaben und verhindert wiederholte Zustellung desselben Hinweises an dasselbe Gerät. Push-Dienst-Ausfälle werden protokolliert; die Uhrzeit ist ein Versandzeitpunkt, keine Garantie für sofortige Anzeige durch iOS.
-4. Palle über sein Home-Bildschirm-Symbol starten und unter Einstellungen → Mitteilungen aktivieren zustimmen. Bei Safari auf iOS ist diese Installation Voraussetzung für Web-Push. Auf jedem weiteren Gerät separat aktivieren.
+4. Palle über sein Home-Bildschirm-Symbol starten und unter Einstellungen → Mitteilungen aktivieren zustimmen. Bei Safari auf iOS ist diese Installation Voraussetzung für Web-Push. Auf jedem weiteren Gerät separat aktivieren. Über „Testnachricht senden“ lässt sich eine echte Pushnachricht vom Server an das aktuelle Gerät schicken. Die Bestätigung bedeutet, dass der Push-Dienst die Nachricht angenommen hat; die Anzeige hängt zusätzlich von den Geräteeinstellungen ab. Testnachrichten sind auf eine je 15 Sekunden pro Sitzung begrenzt.
 
 ## Fotos & laufende Dokumentationen
 
@@ -114,7 +114,7 @@ Passwort ändern:
 
 Vorhandene Sitzungen werden dabei ungültig. Lokal ausstehende Daten werden bei der nächsten Anmeldung wieder angeboten.
 
-Bei Updates Versionsname in `public/sw.js` erhöhen, damit ein neuer App-Cache angelegt wird. Den Browser geschlossen/neu öffnen, um den neuen Service Worker zu aktivieren. Fotos sind privat außerhalb des Web-Stammverzeichnisses; nicht referenzierte Uploads werden nicht automatisch gelöscht, um bei Synchronisierungsabbrüchen keine Bilder zu verlieren.
+Bei Updates Versionsname in `public/sw.js` erhöhen (oder `bin/deploy.php` ausführen), damit ein neuer App-Cache angelegt wird. Unter Einstellungen → App-Updates kann nach einer neuen Version gesucht und diese ausdrücklich geladen werden. Vor dem Neuladen werden lokale Änderungen und offene Notizentwürfe gesichert; IndexedDB und Fotos werden dabei nicht gelöscht. Beim erneuten Sichtbarwerden der App wird ebenfalls nach Updates gesucht. Für den erstmaligen Wechsel von einer älteren App ohne Updatesuche alle Palle-Fenster einschließlich Safari schließen und Palle neu öffnen. Fotos sind privat außerhalb des Web-Stammverzeichnisses; nicht referenzierte Uploads werden nicht automatisch gelöscht, um bei Synchronisierungsabbrüchen keine Bilder zu verlieren.
 
 ## Lokale Entwicklung & Prüfungen
 

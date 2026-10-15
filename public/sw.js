@@ -1,10 +1,11 @@
-const CACHE='palle-shell-v3';
-const FILES=['./','./index.html','./app.css','./app.js','./domain.js','./store.js','./views.js','./manifest.webmanifest','./assets/palle.png','./assets/icon-192.png','./assets/icon-512.png','./vendor/lucide.min.js','./vendor/zxing.min.js'];
-self.addEventListener('install',event=>event.waitUntil(caches.open(CACHE).then(cache=>cache.addAll(FILES))));
+const CACHE='palle-shell-v4';
+const FILES=['./','./index.html','./app.css','./app.js','./domain.js','./store.js','./views.js','./updates.js','./manifest.webmanifest','./assets/palle.png','./assets/icon-192.png','./assets/icon-512.png','./vendor/lucide.min.js','./vendor/zxing.min.js'];
+self.addEventListener('install',event=>event.waitUntil(caches.open(CACHE).then(cache=>cache.addAll(FILES.map(url=>new Request(url,{cache:'reload'}))))));
 self.addEventListener('activate',event=>event.waitUntil(caches.keys().then(keys=>Promise.all(keys.filter(key=>key.startsWith('palle-shell-')&&key!==CACHE).map(key=>caches.delete(key)))).then(()=>self.clients.claim())));
+self.addEventListener('message',event=>{if(event.data?.type==='SKIP_WAITING')event.waitUntil(self.skipWaiting());});
 self.addEventListener('fetch',event=>{
  const url=new URL(event.request.url);if(event.request.method!=='GET'||url.origin!==self.location.origin||url.pathname.endsWith('.php'))return;
- if(event.request.mode==='navigate'){event.respondWith(fetch(event.request).catch(()=>caches.match('./index.html')));return;}
+ if(event.request.mode==='navigate'){event.respondWith(caches.match('./index.html').then(cached=>cached||fetch(event.request)));return;}
  event.respondWith(caches.match(event.request).then(cached=>cached||fetch(event.request)));
 });
 self.addEventListener('push',event=>{
