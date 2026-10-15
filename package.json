@@ -8,7 +8,8 @@
     "test:browser": "node tests/browser.mjs",
     "preview": "node scripts/preview.mjs",
     "test:php": "node scripts/check-php.mjs",
-    "release": "node scripts/prepare-release.mjs"
+    "release": "node scripts/prepare-release.mjs",
+    "test:layout": "node tests/safe-area.mjs"
   },
   "devDependencies": {
     "@php-wasm/node": "3.1.58",
