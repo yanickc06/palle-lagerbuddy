@@ -64,7 +64,7 @@ try {
         if(empty($c['vapid_public'])||empty($c['vapid_private'])||!is_file(dirname(__DIR__).'/vendor/autoload.php'))sendJson(['error'=>'Web-Push ist auf dem Server noch nicht vollständig eingerichtet. Bitte VAPID-Schlüssel und Composer-Installation prüfen.'],503);
         $_SESSION['push_test_at']=time();
         require_once dirname(__DIR__).'/vendor/autoload.php';
-        $push=new Minishlink\WebPush\WebPush(['VAPID'=>['subject'=>$c['vapid_subject'],'publicKey'=>$c['vapid_public'],'privateKey'=>$c['vapid_private']]],[],15);
+        $push=new Minishlink\WebPush\WebPush(['VAPID'=>['subject'=>$c['vapid_subject'],'publicKey'=>$c['vapid_public'],'privateKey'=>$c['vapid_private']]]);
         $message=['title'=>'Palle · Funkprobe','body'=>'Hier ist Palle. Wenn du das liest, steht die Verbindung. Lagerkollege meldet sich einsatzbereit!','url'=>rtrim($c['app_url'],'/').'/#settings','tag'=>'palle-test'];
         $report=$push->sendOneNotification(Minishlink\WebPush\Subscription::create(json_decode($payload,true,512,JSON_THROW_ON_ERROR)),json_encode($message,JSON_UNESCAPED_UNICODE|JSON_THROW_ON_ERROR),['TTL'=>60,'urgency'=>'high']);
         if($report->isSuccess())sendJson(['ok'=>true,'message'=>'Testnachricht an den Push-Dienst übergeben. Prüfe deine Mitteilungen.']);

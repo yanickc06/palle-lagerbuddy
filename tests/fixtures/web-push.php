@@ -3,7 +3,7 @@
 namespace Minishlink\WebPush;
 class Subscription { public static function create($data){return $data;} }
 class WebPush {
- public function __construct(...$args){}
+ public function __construct(array $auth=[],array $defaultOptions=[],?\Psr\Http\Client\ClientInterface $client=null){}
  public function sendOneNotification($subscription,$payload,$options){
   file_put_contents(dirname(__DIR__).'/push-test-payload.json',json_encode(['subscription'=>$subscription,'message'=>json_decode($payload,true),'options'=>$options]));
   return new Report(str_contains($subscription['endpoint'],'expired'));
